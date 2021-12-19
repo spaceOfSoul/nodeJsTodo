@@ -8,7 +8,7 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     
-    <link href="/public/main.css" rel="stylesheet">
+    <link href="/public/css/main.css" rel="stylesheet">
 
     <title>회원가입</title>
   </head>
@@ -16,6 +16,7 @@
       <%- include('nav.html')%>
 
   <div class="container mt-3">
+    <%- include('nav.html')%>
       <h4>회원가입</h4>
     <form action="/signup" method="POST">
       <div class="form-group">
@@ -28,7 +29,7 @@
       
       <div class="form-group">
         <label>비번</label>
-        <input type="text" class="form-control" name="pw">
+        <input type="password" class="form-control" name="pw">
       </div>
       <div class="form-group">
         <label>닉네입</label>

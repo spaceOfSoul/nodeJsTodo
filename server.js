@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
 const methodOverride = require('method-override');
 const crypto = require('crypto');
+
+//app.use(session({ secret: 'keyboard cat' }));
 require('dotenv').config();
 app.use(methodOverride('_method'));
 app.set('view engine','ejs');
@@ -26,21 +28,16 @@ MongoClient.connect(process.env.DB_URL, { useUnifiedTopology: true }, function(e
 
 app.use(bodyParser.urlencoded({extended : true}));
 
-app.get('/',function(req,res){
-    res.render('index.ejs');
-});
+function isLogin(req, res, next){
+    if(req.user){
+        next();
+    }else{
+        res.redirect('/login');
+    }
+}
+
 app.get('/write',function(req,res){
     res.render('write.ejs');
-});
-
-app.get('/list',function(req,res){
-
-    db.collection('post').find().toArray(function(err, result){
-        if(err) return console.log(err);
-        console.log('load complete!');
-        res.render('list.ejs',{posts: result});
-    });
-    //
 });
 
 //search
@@ -65,32 +62,38 @@ app.get('/search',(req,res)=>{
     });
 })
 
-
 //회원 인증
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const session  = require('express-session');
 const res = require('express/lib/response');
+const flash = require('connect-flash');
 
 app.use(session({secret : 'asdf', resave : true, saveUninitialized: false}));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(flash());
 
+//로그인 페이지
 app.get('/login', (req, res)=>{
-    res.render('login.ejs');
+    res.render('login.ejs',{});//
 });
 
 app.post('/login', passport.authenticate('local',{
-    failureRedirect : '/login'
-}), function(req, res){
-    res.redirect('/mypage');
-});
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true,
+}));
 
-
+/*
 app.get('/mypage', isLogin,(req,res)=>{
-    console.log(req.user);
-    res.render('myPage.ejs',{user: req.user.nickname});
+    if(!req.user._id)
+        res.redirect('/login',{st : 1});
+    else
+        res.render('myPage.ejs',{user: req.user.nickname});
 });
+
+*/
 
 //로그인
 passport.use(new LocalStrategy({
@@ -104,11 +107,11 @@ passport.use(new LocalStrategy({
     db.collection('member').findOne({ id: inputId }, function (err, result) {
       if (err) return done(err);
 
-      if (!result) return done(null, false, { message: '존재하지않는 아이디' })
+      if (!result) return done(null, false, { message: '아이디가 존재하지 않습니다.' })
       if (psw == result.password) {
         return done(null, result)
       } else {
-        return done(null, false, { message: '비번틀렸어요' })
+        return done(null, false, { message: '비번밀번호가 틀립니다.' })
       }
     })
   }));
@@ -122,15 +125,6 @@ passport.use(new LocalStrategy({
         done(null,result);
       });
   });
-
-  function isLogin(req, res, next){
-    if(req.user){
-        next();
-    }else{
-        res.send('not login!');
-    }
-}
-
 //sign up
 
 app.get('/signup',(req,res)=>{
@@ -154,19 +148,19 @@ app.post('/signup',(req,res)=>{
     });
 })
 
-//글발행
-app.post('/add', (req,res)=>{
+//글작성
+app.post('/add', isLogin, (req,res)=>{
     console.log("send succes");
 
     db.collection('counter').findOne({name: 'postCount'},
     function(err, result){
         if(!req.user._id)
-            res.redirect('/login');
+            res.redirect('/login',{st : 1});
         else{
         console.log(result.total);
         var postsCount = result.total;
 
-        var saveThis = {_id : postsCount+1,  writer : req.user._id,일정:req.body.title, 날짜:req.body.date};
+        var saveThis = {_id : postsCount+1,  writer : req.user.id,일정:req.body.title, 날짜:req.body.date};
 
         db.collection('post').insertOne(saveThis,
         function(err, result){
@@ -181,9 +175,8 @@ app.post('/add', (req,res)=>{
 
 app.delete('/delete',function(req,res){
 
-    var deleteData = {_id : req.body._id, writer : req.user._id};
-
-    db.collection('post').deleteOne(deleteData,function(err,result){
+    //var deleteData = {_id : req.body._id, writer : req.user.id};
+    db.collection('post').deleteOne({_id : parseInt(req.body._id)},function(err,result){
         if(err){
             res.status(200).send({messege : 'fail'});
             return console.log(err);
@@ -212,4 +205,26 @@ app.put('/edit', (req,res)=>{
             if(err) return console.log('수정 실패');
             res.redirect('/list');
     });
+});
+
+//홈
+app.get('/',function(req,res){
+    if(!req.user){
+        res.render('index.ejs',{name : "not login"});
+    }else
+        res.render('index.ejs',{name : req.user.nickname});
+});
+
+//리스트
+app.get('/list',function(req,res){
+
+    db.collection('post').find().toArray(function(err, result){
+        if(err) return console.log(err);
+        if(!req.user){
+            res.render('list.ejs',{posts: result, loginuser:'not login'});
+        }else{
+            res.render('list.ejs',{posts: result, loginuser:req.user.id});
+        }
+    });
+    //
 });

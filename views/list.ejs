@@ -6,15 +6,14 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="/public/main.css" rel="stylesheet">
+    <link href="/public/css/main.css" rel="stylesheet">
 
     <title>할일 목록</title>
 </head>
 <body>
-  
+  <%- include('nav.html')%>
 
       <div class="container">
-        <%- include('nav.html')%>
         
         <div class="container input-group mb-2">
           <input class="form-control" id = "search-input">
@@ -29,8 +28,12 @@
           <li class="list-group-item">
             <h4> 할 일 : <%= posts[i].일정 %> </h4>
             <p> 마감날짜 : <%= posts[i].날짜 %> </p>
-            <button onclick="location.href='/edit/<%=posts[i]._id%>'">수정</button>
-            <button class = 'delete' data-id = "<%=posts[i]._id%>">삭제</button>
+            <% if(posts[i].writer == loginuser){ %>
+              <button onclick="location.href='/edit/<%=posts[i]._id%>'">수정</button>
+              <button class = 'delete' data-id = "<%=posts[i]._id%>">삭제</button>
+            <% }else{ %>
+              <p><%= posts[i].writer%></p>
+              <% } %>
           </li>
           <% } %>
           <% }else{ %>
