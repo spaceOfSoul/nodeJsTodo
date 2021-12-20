@@ -26,6 +26,7 @@
         <p>오늘의 일정을 작성해보세요.</p>
         <% if(name != "not login"){ %>
           <a class="btn btn-primary btn-lg" href="/write" role="button">일정 작성</a>
+          <a class="btn btn-outline-secondary" href="/logout" role="button">로그아웃</a>
         <% }else {%>
           <a class="btn btn-primary btn-lg" href="/login" role="button">로그인</a>
           <% } %>

@@ -28,8 +28,12 @@
             <li class="list-group-item">
               <h4> 할 일 : <%= ans[i].일정 %> </h4>
               <p> 마감날짜 : <%= ans[i].날짜 %> </p>
-              <button onclick="location.href='/edit/<%=ans[i]._id%>'">수정</button>
-              <button class = 'delete' data-id = "<%=ans[i]._id%>">삭제</button>
+              <% if(ans[i].writer == loginuser){ %>
+                <button onclick="location.href='/edit/<%=ans[i]._id%>'">수정</button>
+                <button class = 'delete' data-id = "<%=ans[i]._id%>">삭제</button>
+              <% }else{ %>
+                <p><%= ans[i].writer%></p>
+                <% } %>
             </li>
             <% } %>
             <% }else{ %>

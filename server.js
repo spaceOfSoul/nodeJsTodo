@@ -40,28 +40,6 @@ app.get('/write',function(req,res){
     res.render('write.ejs');
 });
 
-//search
-app.get('/search',(req,res)=>{
-    var searchCondition = [
-        {
-            $search: {
-                index: 'todoSearch',
-                text: {
-                  query: req.query.value,
-                  path: '일정'
-                }
-            }
-        },
-        { $sort : {_id:1}},
-        //{$project : { score : {$meta : "searchScore"}}}
-    ];
-    db.collection('post').aggregate(searchCondition).toArray((err, result)=>{
-        if(err) return console.log(err);
-        console.log(result);
-        res.render('search.ejs',{ans : result});
-    });
-})
-
 //회원 인증
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
@@ -140,7 +118,7 @@ app.post('/signup',(req,res)=>{
             db.collection('member').insertOne({id :req.body.id, password:psw, nickname:req.body.nickname},
                 function(err, result){
                     if(err) return console.log(err);
-                    res.redirect('/');
+                    res.redirect('/login');
             });
         }else{
             res.render('signup.ejs',{idcheck : true});
@@ -227,4 +205,34 @@ app.get('/list',function(req,res){
         }
     });
     //
+});
+//search
+app.get('/search',(req,res)=>{
+    var searchCondition = [
+        {
+            $search: {
+                index: 'todoSearch',
+                text: {
+                  query: req.query.value,
+                  path: '일정'
+                }
+            }
+        },
+        { $sort : {_id:1}},
+        //{$project : { score : {$meta : "searchScore"}}}
+    ];
+    db.collection('post').aggregate(searchCondition).toArray((err, result)=>{
+        if(err) return console.log(err);
+        console.log(result);
+        if(!req.user){
+            res.render('search.ejs',{ans: result, loginuser:'not login'});
+        }else{
+            res.render('search.ejs',{ans: result, loginuser:req.user.id});
+        }
+    });
+})
+
+app.get('/logout',(req, res)=>{
+    req.logout();
+    res.redirect('/');
 });
