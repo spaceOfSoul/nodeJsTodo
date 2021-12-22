@@ -236,3 +236,42 @@ app.get('/logout',(req, res)=>{
     req.logout();
     res.redirect('/');
 });
+
+let multer = require('multer');
+
+var storage = multer.diskStorage({
+
+    destination : function(req, file, cb){
+        cb(null, './public/image');
+    },
+    filename : function(req, file, cb){
+        cb(null, file.originalname);
+    }
+});
+
+var upload = multer({
+    storage: storage,
+    /*
+    fileFilter: function (req, file, callback) {
+        var ext = path.extname(file.originalname);
+        if(ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
+            return callback(new Error('PNG, JPG만 업로드가능'))
+        }
+        callback(null, true)
+    },*/
+    limits:{
+        fileSize: 1024 * 1024
+    }
+});
+
+app.get('/upload',(req, res) =>{
+    res.render("uploadImg.ejs");
+});
+
+app.post('/upload', upload.single('profile'), function(req, res){
+    res.send('업로드 완료');
+});
+
+app.get('/image/:imagename', (req, res)=>{
+    res.sendFile(__dirname + '/public/image/' + req.params.imagename);
+})
