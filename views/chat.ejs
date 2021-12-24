@@ -18,7 +18,7 @@
       <div class="col-3">
         <ul class="list-group chat-list">
           <% for(let i=0; i< data.length; i++){ %>
-            <li class="list-group-item" data-id="<% data[i].id %>" data-id="<%= data[i]._id %>">
+            <li class="list-group-item" data-id="<%= data[i]._id %>">
               <h6><%= data[i].title%></h6>
               <h6 class="text-small"><%= data[i]._id%></h6>
             </li>
@@ -32,9 +32,6 @@
       <div class="col-9 p-0">
         <div class="chat-room">
            <ul class="list-group chat-content">
-             <li><span class="chat-box">채팅방1 내용</span></li>
-             <li><span class="chat-box">채팅방1 내용</span></li>
-             <li><span class="chat-box mine">채팅방1 내용</span></li>
            </ul>
          <div class="input-group">
            <input class="form-control" id="chat-input">
@@ -49,21 +46,27 @@
       
     <script>
       var selected;
-      $('.list-group-item').click((e)=>{
-        selected = e.target.dataset.id;
-        $(this).css('backgorund-color', '#81BEF7');
+      var eventSouce;
+      const chatContent = document.querySelector('.chat-content');
+      $('.list-group-item').click(function(){
+        selected = $(this).attr('data-id');
+        //$(this).css('backgorund-color', '#81BEF7');
+
+        eventSouce = new EventSource('/talk/' + selected);
+        eventSouce.addEventListener('test', function(e){
+          const messageDats = JSON.parse(e.data);
+          for(let i=0; i<messageDats.length; i++){
+            const li = document.createElement("li");
+            const span = document.createElement("span");
+            span.classList.add("chat-box");
+            span.innerText = messageDats[i].content;
+            li.appendChild(span);
+            chatContent.appendChild(li);
+          }
+        })
       })
 
       $('#send').click(function(){
-        /*
-          {
-            _id:대충
-            parents:채팅방 id(어느챗 그건지 저장)
-            username:유저 닉 <= req로 드감
-            content:챗 내용 <=보내야함
-            date : 오늘날짜및 시간 <= 서버에서 처리
-          }
-        */
         var sendThis ={
           parent : selected,
           content : $('#chat-input').val(),

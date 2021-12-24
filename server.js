@@ -46,6 +46,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const session  = require('express-session');
 const res = require('express/lib/response');
 const flash = require('connect-flash');
+const { createBrotliCompress } = require('zlib');
 
 app.use(session({secret : 'asdf', resave : true, saveUninitialized: false}));
 app.use(passport.initialize());
@@ -285,15 +286,15 @@ app.post('/chatroom', isLogin, (req,res)=>{
         member : [req.body.receiver, req.user.nickname],
         date : new Date(),
     };
-    db.collection('chatroom').insertOne(saveThis).then((result)=>{
-        res.send('저장완료');
+    db.collection('chatroom').insertOne(saveThis,()=>{
+        res.redirect('/chat');
     });
 })
 
-app.get('/chat',(req, res)=>{
+app.get('/chat',isLogin,(req, res)=>{
     db.collection('chatroom').find({ member : req.user.nickname}).toArray().then((result) =>{
         console.log(result);
-        res.render('chat.ejs', {data : result});
+        res.render('chat.ejs', {data : result, you : req.user.nickname});
     })
 });
 
@@ -312,4 +313,18 @@ app.post('/chat', isLogin, (req, res)=>{
             console.log('메세지 전송 완료');
             res.send('메세지 전송 완료');
     });
-})
+});
+
+app.get('/talk/:id', isLogin, function(req, res){
+    res.writeHead(200, {
+        "Connection": "keep-alive",
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+    });
+
+    db.collection('message').find({parent:req.params.id}).toArray()
+    .then((result)=>{
+        res.write('event: test\n');
+        res.write('data: '+ JSON.stringify(result) +'\n\n');
+    });
+});
