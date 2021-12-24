@@ -33,7 +33,10 @@
               <button class = 'delete' data-id = "<%=posts[i]._id%>">삭제</button>
             <% }else{ %>
               <p><%= posts[i].writer%></p>
+              <% if(loginuser != 'not login'){ %>
+                <button class="chatroom" data-id = "<%=posts[i].writer%>">이 유저와의 채팅</button>
               <% } %>
+            <% } %>
           </li>
           <% } %>
           <% }else{ %>
@@ -64,6 +67,20 @@
           }).fail(function(xhr, textStatus, errorThrown){
             console.log(xhr, textStatus, errorThrown);
           });
+        });
+          /*
+            {
+              member : [유저1, 유저2],
+              date : new Date(),
+              title : 이름
+            }
+          */
+        $('.chatroom').click(function(e){
+          var roomData = e.target.dataset.id;
+          $.post('/chatroom',{receiver : roomData})
+          .then(()=>{
+            console.log("방 만듬.");
+          })
         });
 
       </script>

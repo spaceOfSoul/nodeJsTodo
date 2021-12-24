@@ -237,6 +237,9 @@ app.get('/logout',(req, res)=>{
     res.redirect('/');
 });
 
+//파일 업로드 하드에 바로 저장하게 해놔서 호스팅하면 에러남
+//공부했던거 메모할겸 주석으로 남김.
+/*
 let multer = require('multer');
 
 var storage = multer.diskStorage({
@@ -251,14 +254,14 @@ var storage = multer.diskStorage({
 
 var upload = multer({
     storage: storage,
-    /*
+    
     fileFilter: function (req, file, callback) {
         var ext = path.extname(file.originalname);
         if(ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
             return callback(new Error('PNG, JPG만 업로드가능'))
         }
         callback(null, true)
-    },*/
+    },
     limits:{
         fileSize: 1024 * 1024
     }
@@ -269,9 +272,44 @@ app.get('/upload',(req, res) =>{
 });
 
 app.post('/upload', upload.single('profile'), function(req, res){
-    res.send('업로드 완료');
+    res.redirect('');
 });
 
 app.get('/image/:imagename', (req, res)=>{
     res.sendFile(__dirname + '/public/image/' + req.params.imagename);
+})*/
+
+app.post('/chatroom', isLogin, (req,res)=>{
+    var saveThis= {
+        title : `${req.body.receiver}님과의 채팅`,
+        member : [req.body.receiver, req.user.nickname],
+        date : new Date(),
+    };
+    db.collection('chatroom').insertOne(saveThis).then((result)=>{
+        res.send('저장완료');
+    });
+})
+
+app.get('/chat',(req, res)=>{
+    db.collection('chatroom').find({ member : req.user.nickname}).toArray().then((result) =>{
+        console.log(result);
+        res.render('chat.ejs', {data : result});
+    })
+});
+
+app.post('/chat', isLogin, (req, res)=>{
+
+    var saveMessage = {
+        parent: req.body.parent,
+        username: req.user.nickname,
+        content: req.body.content,
+        date : new Date(),
+    }
+
+    db.collection('message').insertOne(saveMessage,
+        function(err, result){
+            if(err) return console.log(err);
+            console.log('메세지 전송 완료');
+            res.send('메세지 전송 완료');
+    });
 })
