@@ -139,7 +139,7 @@ app.post('/add', isLogin, (req,res)=>{
         console.log(result.total);
         var postsCount = result.total;
 
-        var saveThis = {_id : postsCount+1,  writer : req.user.id,일정:req.body.title, 날짜:req.body.date};
+        var saveThis = {_id : postsCount+1,  writer : req.user.nickname,일정:req.body.title, 날짜:req.body.date};
 
         db.collection('post').insertOne(saveThis,
         function(err, result){
@@ -202,7 +202,7 @@ app.get('/list',function(req,res){
         if(!req.user){
             res.render('list.ejs',{posts: result, loginuser:'not login'});
         }else{
-            res.render('list.ejs',{posts: result, loginuser:req.user.id});
+            res.render('list.ejs',{posts: result, loginuser:req.user.nickname});
         }
     });
     //
@@ -228,7 +228,7 @@ app.get('/search',(req,res)=>{
         if(!req.user){
             res.render('search.ejs',{ans: result, loginuser:'not login'});
         }else{
-            res.render('search.ejs',{ans: result, loginuser:req.user.id});
+            res.render('search.ejs',{ans: result, loginuser:req.user.nickname});
         }
     });
 })
@@ -282,13 +282,14 @@ app.get('/image/:imagename', (req, res)=>{
 
 app.post('/chatroom', isLogin, (req,res)=>{
     var saveThis= {
-        title : `${req.body.receiver}님과의 채팅`,
+        title : `${req.body.receiver},${req.user.nickname}`,
         member : [req.body.receiver, req.user.nickname],
         date : new Date(),
     };
-    db.collection('chatroom').insertOne(saveThis,()=>{
-        res.redirect('/chat');
+    db.collection('chatroom').insertOne(saveThis,(err,result)=>{
+        if(err) return console.log(err);
     });
+    res.redirect('/chat');
 })
 
 app.get('/chat',isLogin,(req, res)=>{
@@ -327,4 +328,16 @@ app.get('/talk/:id', isLogin, function(req, res){
         res.write('event: test\n');
         res.write('data: '+ JSON.stringify(result) +'\n\n');
     });
+
+    const pipeline = [
+        {$match : { 'fullDocument.parent':req.params.id }}
+    ];
+
+    const collection = db.collection('message');
+    const changeStram = collection.watch(pipeline);
+    changeStram.on('change', (result)=>{
+        res.write('event: test\n');
+        res.write('data: '+ JSON.stringify([result.fullDocument]) +'\n\n');
+    });
+
 });

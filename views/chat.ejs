@@ -12,6 +12,7 @@
 </head>
 <body>
   <%- include('nav.html')%>
+  <p style="display : none" id="nickname"><%=you%></p>
   <div class="container p-4 detail">
 
     <div class="row">
@@ -33,10 +34,10 @@
         <div class="chat-room">
            <ul class="list-group chat-content">
            </ul>
-         <div class="input-group">
+         <form class="input-group">
            <input class="form-control" id="chat-input">
            <button class="btn btn-secondary" id="send">전송</button><!---->
-         </div>
+         </form>
        </div>
      </div>
     </div>
@@ -51,7 +52,13 @@
       $('.list-group-item').click(function(){
         selected = $(this).attr('data-id');
         //$(this).css('backgorund-color', '#81BEF7');
+        chatContent.innerHTML = '';
 
+        if(eventSouce != undefined){
+          eventSouce.close();
+        }
+
+        const you = document.querySelector('#nickname').innerText;
         eventSouce = new EventSource('/talk/' + selected);
         eventSouce.addEventListener('test', function(e){
           const messageDats = JSON.parse(e.data);
@@ -59,6 +66,9 @@
             const li = document.createElement("li");
             const span = document.createElement("span");
             span.classList.add("chat-box");
+            if(messageDats[i].username == you){
+              span.classList.add("mine");
+            }
             span.innerText = messageDats[i].content;
             li.appendChild(span);
             chatContent.appendChild(li);
@@ -66,14 +76,14 @@
         })
       })
 
-      $('#send').click(function(){
+      $('#send').click(function(e){
+        e.preventDefault();
         var sendThis ={
           parent : selected,
           content : $('#chat-input').val(),
         }
-        $.post('/chat', sendThis).then((result)=>{
-          console.log(result);
-        })
+        $.post('/chat', sendThis);
+        $('#chat-input').val('');
       })
     </script>
 
