@@ -5,6 +5,10 @@ const MongoClient = require('mongodb').MongoClient;
 const methodOverride = require('method-override');
 const crypto = require('crypto');
 
+const http = require('http').createServer(app);
+const {Server} = require('socket.io');
+const io = new Server(http);
+
 //app.use(session({ secret: 'keyboard cat' }));
 require('dotenv').config();
 app.use(methodOverride('_method'));
@@ -21,7 +25,7 @@ MongoClient.connect(process.env.DB_URL, { useUnifiedTopology: true }, function(e
     
     db = client.db('todod');
 
-    app.listen(process.env.PORT, function(){
+    http.listen(process.env.PORT, function(){
         console.log("ok!");
     });
 })
@@ -286,6 +290,7 @@ app.post('/chatroom', isLogin, (req,res)=>{
         member : [req.body.receiver, req.user.nickname],
         date : new Date(),
     };
+
     db.collection('chatroom').insertOne(saveThis,(err,result)=>{
         if(err) return console.log(err);
     });
@@ -300,7 +305,6 @@ app.get('/chat',isLogin,(req, res)=>{
 });
 
 app.post('/chat', isLogin, (req, res)=>{
-
     var saveMessage = {
         parent: req.body.parent,
         username: req.user.nickname,
@@ -338,6 +342,19 @@ app.get('/talk/:id', isLogin, function(req, res){
     changeStram.on('change', (result)=>{
         res.write('event: test\n');
         res.write('data: '+ JSON.stringify([result.fullDocument]) +'\n\n');
+    });
+
+});
+
+app.get('/allChat',isLogin, (req, res)=>{
+    res.render('socket.ejs', {you : req.user.nickname});
+})
+
+io.on('connection',(socket)=>{
+    console.log('connect');
+
+    socket.on('user-send', (data)=>{
+        io.emit('broadcast',data);
     });
 
 });
