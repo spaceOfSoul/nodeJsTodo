@@ -20,7 +20,7 @@
            <ul class="list-group chat-content">
            </ul>
          <form class="input-group">
-           <input class="form-control" id="chat-input">
+           <input class="form-control" id="chat-input" required>
            <button class="btn btn-secondary" id="send">전송</button><!---->
          </form>
        </div>
@@ -33,16 +33,26 @@
       <script>
           var socket = io();
           const chatContent = document.querySelector('.chat-content');
+          const you = $('#nickname').text();
           $('#send').click((e)=>{
               e.preventDefault();
-            socket.emit('user-send',{content : $('#chat-input').val()});
+              if($('#chat-input').val().length >=1)
+               socket.emit('user-send',{content : $('#chat-input').val(), name: you});
             $('#chat-input').val('');
         });
 
         socket.on('broadcast', function(data){
             console.log(data);
-            $('.chat-content').append(`<li><span class = "chat-box">${data}</span></li>`);
-            chatContent.scrollTop = chatContent.scrollHeight;
+            if(data.name != you){
+              $('.chat-content').append(`<li>
+                <p style = "margin-bottom :0px;margin-top:10px; font-size:10px">${data.name}</p>
+                <span class = "chat-box">${data.content}</span></li>`);
+            }else{
+              $('.chat-content').append(`<li>
+                <p class = "myname" style = "margin-bottom :0px;margin-top:10px; font-size:10px">${data.name}</p>
+                <span class = "chat-box mine">${data.content}</span></li>`);
+            }
+              chatContent.scrollTop = chatContent.scrollHeight;
         });
       </script>
 

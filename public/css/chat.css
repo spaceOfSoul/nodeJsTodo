@@ -21,3 +21,6 @@
   .mine {
     float: right;
   } 
+  .myname{
+    text-align: right;
+  }
