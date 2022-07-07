@@ -44,6 +44,10 @@ app.get('/write',function(req,res){
     res.render('write.ejs');
 });
 
+app.get('/jinuHelp',function(req,res){
+    res.render('jinu.ejs');
+})
+
 //회원 인증
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
