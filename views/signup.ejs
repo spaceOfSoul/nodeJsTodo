@@ -29,7 +29,12 @@
       <div class="form-group">
         <label>비번</label>
         <input type="password" class="form-control" name="pw">
+        <label>비번 확인</label>
+        <input type="password" class="form-control" name = "pwCheck">
       </div>
+        <% if(pwNotMatched){ %>
+          <p class="text-danger">비밀번호가 일치하지 않음</p>
+        <% } %>
       <div class="form-group">
         <label>닉네임</label>
         <input type="text" class="form-control" name="nickname">

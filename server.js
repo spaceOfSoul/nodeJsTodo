@@ -115,22 +115,28 @@ passport.use(new LocalStrategy({
 //sign up
 
 app.get('/signup',(req,res)=>{
-    res.render('signup.ejs',{idcheck : false});
+    res.render('signup.ejs',{idcheck : false, pwNotMatched : false});
 });
 
 app.post('/signup',(req,res)=>{
     const psw = crypto.createHash('sha512').update(req.body.pw).digest('base64');
+    const psw_check = crypto.createHash('sha512').update(req.body.pwCheck).digest('base64');
 
     db.collection('member').findOne({ id: req.body.id }, function (err, result) {
         if (err) return done(err);
-        if (!result){
+        const pwCheck = (psw_check===psw);
+        if (!result && pwCheck){
+            
             db.collection('member').insertOne({id :req.body.id, password:psw, nickname:req.body.nickname},
                 function(err, result){
                     if(err) return console.log(err);
                     res.redirect('/login');
             });
         }else{
-            res.render('signup.ejs',{idcheck : true});
+            if(result)
+                res.render('signup.ejs',{idcheck : true, pwNotMatched : false});
+            else if(!pwCheck)
+                res.render('signup.ejs',{idcheck : false, pwNotMatched : true});
         }
     });
 })
